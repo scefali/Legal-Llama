@@ -2,6 +2,7 @@ import torch
 from auto_gptq import AutoGPTQForCausalLM
 from huggingface_hub import hf_hub_download
 from langchain.llms import LlamaCpp
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
 from transformers import (
     AutoModelForCausalLM,
@@ -9,7 +10,12 @@ from transformers import (
     LlamaForCausalLM,
     LlamaTokenizer,
 )
+from langchain.callbacks.manager import CallbackManager
 from constants import CONTEXT_WINDOW_SIZE, MAX_NEW_TOKENS, N_GPU_LAYERS, N_BATCH, MODELS_PATH
+
+
+callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
+
 
 
 def load_quantized_model_gguf_ggml(model_id, model_basename, device_type, logging):
@@ -53,6 +59,9 @@ def load_quantized_model_gguf_ggml(model_id, model_basename, device_type, loggin
         if device_type.lower() == "cuda":
             kwargs["n_gpu_layers"] = N_GPU_LAYERS  # set this based on your GPU
 
+        kwargs["callback_manager"] = callback_manager
+        kwargs["streaming"] = True
+        kwargs["callbacks"] = [StreamingStdOutCallbackHandler()]
         return LlamaCpp(**kwargs)
     except:
         if "ggml" in model_basename:

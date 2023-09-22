@@ -5,15 +5,17 @@ import subprocess
 
 import torch
 from auto_gptq import AutoGPTQForCausalLM
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, render_template, stream_with_context, request, Response
+
 from langchain.chains import RetrievalQA
 from langchain.embeddings import HuggingFaceInstructEmbeddings
+from queue import Queue
 
 # from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.llms import HuggingFacePipeline
 from run_localGPT import load_model
 
-# from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.vectorstores import Chroma
 from transformers import (
     AutoModelForCausalLM,
@@ -27,12 +29,16 @@ from werkzeug.utils import secure_filename
 
 from constants import CHROMA_SETTINGS, EMBEDDING_MODEL_NAME, PERSIST_DIRECTORY, MODEL_ID, MODEL_BASENAME
 
+
+app = Flask(__name__)
 DEVICE_TYPE = "cuda" if torch.cuda.is_available() else "cpu"
 SHOW_SOURCES = True
 logging.info(f"Running on: {DEVICE_TYPE}")
 logging.info(f"Display Source Documents set to: {SHOW_SOURCES}")
 
 EMBEDDINGS = HuggingFaceInstructEmbeddings(model_name=EMBEDDING_MODEL_NAME, model_kwargs={"device": DEVICE_TYPE})
+
+queue = Queue()  # This queue will store user prompts
 
 # uncomment the following line if you used HuggingFaceEmbeddings in the ingest.py
 # EMBEDDINGS = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
@@ -73,35 +79,6 @@ QA = RetrievalQA.from_chain_type(
 app = Flask(__name__)
 
 
-@app.route("/api/delete_source", methods=["GET"])
-def delete_source_route():
-    folder_name = "SOURCE_DOCUMENTS"
-
-    if os.path.exists(folder_name):
-        shutil.rmtree(folder_name)
-
-    os.makedirs(folder_name)
-
-    return jsonify({"message": f"Folder '{folder_name}' successfully deleted and recreated."})
-
-
-@app.route("/api/save_document", methods=["GET", "POST"])
-def save_document_route():
-    if "document" not in request.files:
-        return "No document part", 400
-    file = request.files["document"]
-    if file.filename == "":
-        return "No selected file", 400
-    if file:
-        filename = secure_filename(file.filename)
-        folder_path = "SOURCE_DOCUMENTS"
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-        file_path = os.path.join(folder_path, filename)
-        file.save(file_path)
-        return "File saved successfully", 200
-
-
 @app.route("/api/run_ingest", methods=["GET"])
 def run_ingest_route():
     global DB
@@ -120,7 +97,7 @@ def run_ingest_route():
         if DEVICE_TYPE == "cpu":
             run_langest_commands.append("--device_type")
             run_langest_commands.append(DEVICE_TYPE)
-            
+
         result = subprocess.run(run_langest_commands, capture_output=True)
         if result.returncode != 0:
             return "Script execution failed: {}".format(result.stderr.decode("utf-8")), 500
@@ -143,7 +120,8 @@ def run_ingest_route():
 @app.route("/api/prompt_route", methods=["GET", "POST"])
 def prompt_route():
     global QA
-    user_prompt = request.form.get("user_prompt")
+    user_prompt = request.args.get("user_prompt")
+    print("user prompt", user_prompt)
     if user_prompt:
         # print(f'User Prompt: {user_prompt}')
         # Get the answer from the chain
@@ -164,6 +142,21 @@ def prompt_route():
         return jsonify(prompt_response_dict), 200
     else:
         return "No user prompt received", 400
+
+
+@app.route("/stream/prompt")
+def streamed_response():
+    user_prompt = request.args.get("user_prompt")
+    print("got user prompt", user_prompt)
+
+    def generate():
+        res = QA.stream(user_prompt, callbacks=StreamingStdOutCallbackHandler())
+        for item in res:
+            print("item", item)
+            yield item["result"]
+            # yield jsonify(item)
+
+    return stream_with_context(generate())
 
 
 if __name__ == "__main__":
