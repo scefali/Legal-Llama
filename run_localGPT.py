@@ -5,14 +5,10 @@ import torch
 from langchain.chains import RetrievalQA
 from langchain.embeddings import HuggingFaceInstructEmbeddings
 from langchain.llms import HuggingFacePipeline
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler  # for streaming response
 from langchain.callbacks.manager import CallbackManager
-
-callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
 
 from prompt_template_utils import get_prompt_template
 
-# from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.vectorstores import Chroma
 from transformers import (
     GenerationConfig,
@@ -138,7 +134,6 @@ def retrieval_qa_pipline(device_type, use_history, promptTemplate_type="llama"):
             chain_type="stuff",  # try other chains types as well. refine, map_reduce, map_rerank
             retriever=retriever,
             return_source_documents=True,  # verbose=True,
-            callbacks=callback_manager,
             chain_type_kwargs={"prompt": prompt, "memory": memory},
         )
     else:
@@ -147,7 +142,6 @@ def retrieval_qa_pipline(device_type, use_history, promptTemplate_type="llama"):
             chain_type="stuff",  # try other chains types as well. refine, map_reduce, map_rerank
             retriever=retriever,
             return_source_documents=True,  # verbose=True,
-            callbacks=callback_manager,
             chain_type_kwargs={
                 "prompt": prompt,
             },

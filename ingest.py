@@ -106,7 +106,7 @@ def load_document_batch(bucket_name: str, filepaths: List[str]):
     # create a thread pool
     with ThreadPoolExecutor(len(filepaths)) as exe:
         # load files
-        futures = [exe.submit(load_single_document, bucket_name, name) for name in filepaths]
+        futures = [exe.submit(load_single_document, bucket_name, name) for name in filepaths[0:1]]
         # collect data
         data_list = [future.result() for future in futures]
         # return data and file paths

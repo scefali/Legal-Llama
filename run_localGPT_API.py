@@ -2,30 +2,21 @@ import logging
 import os
 import shutil
 import subprocess
+from asyncio import run
 
 import torch
-from auto_gptq import AutoGPTQForCausalLM
-from flask import Flask, jsonify, render_template, stream_with_context, request, Response
+from flask import Flask, jsonify, stream_with_context, request, Response
 
 from langchain.chains import RetrievalQA
 from langchain.embeddings import HuggingFaceInstructEmbeddings
 from queue import Queue
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
 # from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.llms import HuggingFacePipeline
 from run_localGPT import load_model
 
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.vectorstores import Chroma
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    GenerationConfig,
-    LlamaForCausalLM,
-    LlamaTokenizer,
-    pipeline,
-)
-from werkzeug.utils import secure_filename
+
 
 from constants import CHROMA_SETTINGS, EMBEDDING_MODEL_NAME, PERSIST_DIRECTORY, MODEL_ID, MODEL_BASENAME
 
@@ -144,19 +135,42 @@ def prompt_route():
         return "No user prompt received", 400
 
 
+
+
 @app.route("/stream/prompt")
 def streamed_response():
     user_prompt = request.args.get("user_prompt")
     print("got user prompt", user_prompt)
 
     def generate():
-        res = QA.stream(user_prompt, callbacks=StreamingStdOutCallbackHandler())
+        res = QA.stream(user_prompt, config={"callbacks": [StreamingStdOutCallbackHandler()]})
         for item in res:
             print("item", item)
             yield item["result"]
             # yield jsonify(item)
 
     return stream_with_context(generate())
+
+
+# @app.route("/stream/prompt")
+# def streamed_response():
+#     user_prompt = request.args.get("user_prompt")
+#     print("got user prompt", user_prompt)
+
+#     def generate():
+#         items = run(gather_items_from_async_gen(user_prompt))
+#         for item in items:
+#             print("item", item)
+#             yield item["result"]
+
+#     return Response(generate(), content_type='text/plain')
+
+
+# async def gather_items_from_async_gen(user_prompt):
+#     items = []
+#     async for item in QA.astream(user_prompt):
+#         items.append(item)
+#     return items
 
 
 if __name__ == "__main__":
