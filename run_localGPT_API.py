@@ -4,6 +4,10 @@ import shutil
 import subprocess
 from asyncio import run
 
+import threading
+from queue import Empty, Queue
+import time
+
 import torch
 from flask import Flask, jsonify, stream_with_context, request, Response
 
@@ -16,6 +20,7 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from run_localGPT import load_model
 
 from langchain.vectorstores import Chroma
+from callback_handlers import StreamingCallbackHandler
 
 
 from constants import CHROMA_SETTINGS, EMBEDDING_MODEL_NAME, PERSIST_DIRECTORY, MODEL_ID, MODEL_BASENAME
@@ -135,42 +140,41 @@ def prompt_route():
         return "No user prompt received", 400
 
 
-
-
 @app.route("/stream/prompt")
 def streamed_response():
     user_prompt = request.args.get("user_prompt")
     print("got user prompt", user_prompt)
 
+    token_queue = Queue()
+
     def generate():
-        res = QA.stream(user_prompt, config={"callbacks": [StreamingStdOutCallbackHandler()]})
-        for item in res:
-            print("item", item)
-            yield item["result"]
-            # yield jsonify(item)
+        def on_token(token):
+            print("on token", token)
+            token_queue.put(token)
+
+        def stream_function():
+            return QA(user_prompt, callbacks=[StreamingCallbackHandler(on_token)])
+
+        # Start the streaming in a separate thread
+        stream_thread = threading.Thread(target=stream_function)
+        stream_thread.start()
+
+        # In the main thread, yield tokens from the queue:
+        while stream_thread.is_alive():  # While the stream_thread is running
+            try:
+                token = token_queue.get(timeout=10)  # Wait for a token for up to 5 seconds
+                yield token
+            except Empty:
+                # No token received within the timeout, but the thread is still running.
+                continue
+
+        # After the streaming thread has finished, there might be tokens left in the queue. Handle them:
+        while not token_queue.empty():
+            yield token_queue.get()
+
+        stream_thread.join()
 
     return stream_with_context(generate())
-
-
-# @app.route("/stream/prompt")
-# def streamed_response():
-#     user_prompt = request.args.get("user_prompt")
-#     print("got user prompt", user_prompt)
-
-#     def generate():
-#         items = run(gather_items_from_async_gen(user_prompt))
-#         for item in items:
-#             print("item", item)
-#             yield item["result"]
-
-#     return Response(generate(), content_type='text/plain')
-
-
-# async def gather_items_from_async_gen(user_prompt):
-#     items = []
-#     async for item in QA.astream(user_prompt):
-#         items.append(item)
-#     return items
 
 
 if __name__ == "__main__":
