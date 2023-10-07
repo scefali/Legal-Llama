@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM nvidia/cuda:11.7.1-runtime-ubuntu22.04
+FROM nvidia/cuda:12.1.0-base-ubuntu20.04 
 
 RUN apt-get update && apt-get install -y software-properties-common
 RUN apt-get install -y g++-11 make python3 python-is-python3 pip
@@ -14,6 +14,9 @@ COPY . .
 
 RUN ls -al
 
+ENV PATH="/opt/program:${PATH}"
+
+
 
 # Make sure train and serve scripts are in PATH and executable
 COPY train.sh /opt/program/train
@@ -21,6 +24,7 @@ COPY serve.sh /opt/program/serve
 
 RUN chmod +x /opt/program/train
 RUN chmod +x /opt/program/serve
+
 
 
 ENV device_type=cuda

@@ -19,7 +19,10 @@ tag:
 push:
 	docker push $(ACCOUNT_ID).dkr.ecr.$(REGION).amazonaws.com/$(REPO_NAME):latest
 
+deploy:
+	python deploy_to_sagemaker.py
+
 # All-in-one command
-all: login build tag push
+all: login build tag push deploy
 
 .PHONY: login build tag push all

@@ -98,6 +98,13 @@ EMBEDDING_MODEL_NAME = "hkunlp/instructor-large"  # Uses 1.5 GB of VRAM (High Ac
 MODEL_ID = "TheBloke/Llama-2-7b-Chat-GGUF"
 MODEL_BASENAME = "llama-2-7b-chat.Q4_K_M.gguf"
 
+
+# what sagemaker uses
+DEPLOYED_MODEL_ID = "TheBloke/wizardLM-7B-GPTQ"
+DEPLOYED_MODEL_BASENAME = "model.safetensors"
+
+
+
 # MODEL_ID = "TheBloke/Llama-2-70b-Chat-GGUF"
 # MODEL_BASENAME = "llama-2-70b-chat.Q4_K_M.gguf"
 
