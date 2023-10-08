@@ -30,6 +30,8 @@ from constants import (
     MODELS_PATH,
 )
 
+logging.basicConfig(level=logging.INFO)
+
 
 def load_model(device_type, model_id, model_basename=None, LOGGING=logging):
     """
@@ -50,6 +52,7 @@ def load_model(device_type, model_id, model_basename=None, LOGGING=logging):
         ValueError: If an unsupported model or device type is provided.
     """
     logging.info(f"Loading Model: {model_id}, on: {device_type}")
+    print(f"Loading Model: {model_id}, on: {device_type}")
     logging.info("This action can take a few minutes!")
 
     if model_basename is not None:
