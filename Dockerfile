@@ -18,7 +18,8 @@ RUN python3.10 -m ensurepip --upgrade
 
 # Copy just the requirements and install them first for caching
 COPY ./requirements.txt .
-RUN --mount=type=cache,target=/root/.cache CMAKE_ARGS="-DLLAMA_CUBLAS=on" FORCE_CMAKE=1 python3.10 -m pip install --timeout 100 -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache CMAKE_ARGS="-DLLAMA_CUBLAS=on" FORCE_CMAKE=1 python3.10 -m pip install --ignore-installed PyYAML && \
+    python3.10 -m pip install --timeout 100 -r requirements.txt
 
 # Copy the rest of the files
 COPY . .
