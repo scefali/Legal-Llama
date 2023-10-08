@@ -1,4 +1,5 @@
 import os
+import torch
 
 # from dotenv import load_dotenv
 from chromadb.config import Settings
@@ -95,14 +96,18 @@ EMBEDDING_MODEL_NAME = "hkunlp/instructor-large"  # Uses 1.5 GB of VRAM (High Ac
 # MODEL_ID = "TheBloke/Llama-2-13b-Chat-GGUF"
 # MODEL_BASENAME = "llama-2-13b-chat.Q4_K_M.gguf"
 
-MODEL_ID = "TheBloke/Llama-2-7b-Chat-GGUF"
-MODEL_BASENAME = "llama-2-7b-chat.Q4_K_M.gguf"
+# what my machine uses
+LOCAL_MODEL_ID = "TheBloke/Llama-2-7b-Chat-GGUF"
+LOCAL_MODEL_BASENAME = "llama-2-7b-chat.Q4_K_M.gguf"
 
 
-# what sagemaker uses
+# what AWS uses
 DEPLOYED_MODEL_ID = "TheBloke/wizardLM-7B-GPTQ"
 DEPLOYED_MODEL_BASENAME = "model.safetensors"
 
+# switch between local and deployed models
+MODEL_ID = DEPLOYED_MODEL_ID if torch.cuda.is_available() else LOCAL_MODEL_ID
+MODEL_BASENAME = DEPLOYED_MODEL_BASENAME if torch.cuda.is_available() else LOCAL_MODEL_BASENAME
 
 
 # MODEL_ID = "TheBloke/Llama-2-70b-Chat-GGUF"
