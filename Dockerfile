@@ -3,11 +3,10 @@
 FROM nvidia/cuda:12.1.0-base-ubuntu20.04 
 
 RUN apt-get update && apt-get install -y software-properties-common
-RUN apt-get install -y g++-11 make python3 python-is-python3 pip
+RUN apt-get install -y g++-11 make python3 python-is-python3 pip sqlite3
 
 # Install necessary dependencies and Python 3.10
-RUN apt-get update \
-    && apt-get install -y software-properties-common \
+RUN apt-get install -y software-properties-common \
     && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update \
     && apt-get install -y python3.10 python3.10-distutils python3.10-venv python3.10-dev python3-pip
