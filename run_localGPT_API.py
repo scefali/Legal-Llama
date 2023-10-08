@@ -67,6 +67,7 @@ DB = Chroma(
 RETRIEVER = DB.as_retriever()
 
 LLM = load_model(device_type=DEVICE_TYPE, model_id=MODEL_ID, model_basename=MODEL_BASENAME)
+print("got model", LLM)
 
 QA = RetrievalQA.from_chain_type(
     llm=LLM, chain_type="stuff", retriever=RETRIEVER, return_source_documents=SHOW_SOURCES
