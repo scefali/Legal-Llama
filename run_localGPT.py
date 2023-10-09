@@ -81,8 +81,7 @@ def load_model(device_type, model_id, model_basename=None, LOGGING=logging):
         temperature=0.2,
         # top_p=0.95,
         repetition_penalty=1.15,
-        generation_config=generation_config,
-        streamin=True,
+        generation_config=generation_config
     )
 
     local_llm = HuggingFacePipeline(pipeline=pipe)
