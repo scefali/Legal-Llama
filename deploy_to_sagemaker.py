@@ -69,7 +69,7 @@ def deploy_model():
     )
 
     # Deploy the model. This will launch an endpoint.
-    predictor = model.deploy(instance_type="ml.p3.2xlarge", initial_instance_count=1)
+    predictor = model.deploy(instance_type="ml.g4dn.2xlarge", initial_instance_count=1)
 
     return predictor
 
