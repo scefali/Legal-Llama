@@ -28,7 +28,7 @@ from constants import CHROMA_SETTINGS, EMBEDDING_MODEL_NAME, PERSIST_DIRECTORY, 
 
 app = Flask(__name__)
 DEVICE_TYPE = "cuda" if torch.cuda.is_available() else "cpu"
-SHOW_SOURCES = True
+SHOW_SOURCES = False
 logging.info(f"Running on: {DEVICE_TYPE}")
 logging.info(f"Display Source Documents set to: {SHOW_SOURCES}")
 
