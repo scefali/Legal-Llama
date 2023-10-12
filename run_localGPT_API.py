@@ -145,6 +145,8 @@ def prompt_route():
 def streamed_response():
     user_prompt = request.args.get("user_prompt")
     print("got user prompt", user_prompt)
+    if not user_prompt:
+        return "No user prompt received", 400
 
     token_queue = Queue()
 
