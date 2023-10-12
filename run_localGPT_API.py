@@ -114,7 +114,7 @@ def run_ingest_route():
         return f"Error occurred: {str(e)}", 500
 
 
-@app.route("/api/prompt_route", methods=["GET", "POST"])
+@app.route("/api/prompt", methods=["GET", "POST"])
 def prompt_route():
     global QA
     user_prompt = request.args.get("user_prompt")
@@ -139,6 +139,12 @@ def prompt_route():
         return jsonify(prompt_response_dict), 200
     else:
         return "No user prompt received", 400
+    
+
+
+@app.route("/api/test", methods=["GET"])
+def def_test_routes():
+    return "Test successful"
 
 
 @app.route("/stream/prompt")
