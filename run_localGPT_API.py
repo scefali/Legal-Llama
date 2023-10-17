@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 from asyncio import run
+from langchain.globals import set_debug
 
 import threading
 from queue import Empty, Queue
@@ -35,6 +36,9 @@ logging.info(f"Display Source Documents set to: {SHOW_SOURCES}")
 EMBEDDINGS = HuggingFaceInstructEmbeddings(model_name=EMBEDDING_MODEL_NAME, model_kwargs={"device": DEVICE_TYPE})
 
 queue = Queue()  # This queue will store user prompts
+
+set_debug(True)
+
 
 # uncomment the following line if you used HuggingFaceEmbeddings in the ingest.py
 # EMBEDDINGS = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
