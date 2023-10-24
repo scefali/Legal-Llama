@@ -1,21 +1,18 @@
 import logging
 import os
 import shutil
-import subprocess
 from asyncio import run
 from langchain.globals import set_debug
 
 import threading
 from queue import Empty, Queue
-import time
 
 import torch
-from flask import Flask, jsonify, stream_with_context, request, Response
+from flask import Flask, jsonify, stream_with_context, request
 
 from langchain.chains import RetrievalQA
 from langchain.embeddings import HuggingFaceInstructEmbeddings
 from queue import Queue
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
 # from langchain.embeddings import HuggingFaceEmbeddings
 from run_localGPT import load_model
@@ -50,23 +47,14 @@ if os.path.exists(PERSIST_DIRECTORY):
 else:
     print("The directory does not exist")
 
-run_langest_commands = ["python", "ingest.py"]
-if DEVICE_TYPE == "cpu":
-    run_langest_commands.append("--device_type")
-    run_langest_commands.append(DEVICE_TYPE)
-
-result = subprocess.run(run_langest_commands, capture_output=True)
-if result.returncode != 0:
-    raise FileNotFoundError(
-        "No files were found inside SOURCE_DOCUMENTS, please put a starter file inside before starting the API!"
-    )
-
 # load the vectorstore
+print("loading vectorstore")
 DB = Chroma(
     persist_directory=PERSIST_DIRECTORY,
     embedding_function=EMBEDDINGS,
     client_settings=CHROMA_SETTINGS,
 )
+print("loaded vectorstore")
 
 RETRIEVER = DB.as_retriever()
 
@@ -78,44 +66,6 @@ QA = RetrievalQA.from_chain_type(
 )
 
 app = Flask(__name__)
-
-
-@app.route("/api/run_ingest", methods=["GET"])
-def run_ingest_route():
-    global DB
-    global RETRIEVER
-    global QA
-    try:
-        if os.path.exists(PERSIST_DIRECTORY):
-            try:
-                shutil.rmtree(PERSIST_DIRECTORY)
-            except OSError as e:
-                print(f"Error: {e.filename} - {e.strerror}.")
-        else:
-            print("The directory does not exist")
-
-        run_langest_commands = ["python", "ingest.py"]
-        if DEVICE_TYPE == "cpu":
-            run_langest_commands.append("--device_type")
-            run_langest_commands.append(DEVICE_TYPE)
-
-        result = subprocess.run(run_langest_commands, capture_output=True)
-        if result.returncode != 0:
-            return "Script execution failed: {}".format(result.stderr.decode("utf-8")), 500
-        # load the vectorstore
-        DB = Chroma(
-            persist_directory=PERSIST_DIRECTORY,
-            embedding_function=EMBEDDINGS,
-            client_settings=CHROMA_SETTINGS,
-        )
-        RETRIEVER = DB.as_retriever()
-
-        QA = RetrievalQA.from_chain_type(
-            llm=LLM, chain_type="stuff", retriever=RETRIEVER, return_source_documents=SHOW_SOURCES
-        )
-        return "Script executed successfully: {}".format(result.stdout.decode("utf-8")), 200
-    except Exception as e:
-        return f"Error occurred: {str(e)}", 500
 
 
 @app.route("/api/prompt", methods=["GET", "POST"])
