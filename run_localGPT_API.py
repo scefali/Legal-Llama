@@ -1,7 +1,6 @@
 import logging
 import os
 import shutil
-from asyncio import run
 from langchain.globals import set_debug
 
 import threading
@@ -12,7 +11,6 @@ from flask import Flask, jsonify, stream_with_context, request
 
 from langchain.chains import RetrievalQA
 from langchain.embeddings import HuggingFaceInstructEmbeddings
-from queue import Queue
 
 # from langchain.embeddings import HuggingFaceEmbeddings
 from run_localGPT import load_model

@@ -28,6 +28,7 @@ from constants import (
     MODEL_BASENAME,
     MAX_NEW_TOKENS,
     MODELS_PATH,
+    TEMPERATURE
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -78,7 +79,7 @@ def load_model(device_type, model_id, model_basename=None, LOGGING=logging):
         model=model,
         tokenizer=tokenizer,
         max_length=MAX_NEW_TOKENS,
-        temperature=0.2,
+        temperature=TEMPERATURE,
         # top_p=0.95,
         repetition_penalty=1.15,
         generation_config=generation_config
