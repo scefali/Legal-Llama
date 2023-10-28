@@ -110,7 +110,6 @@ def streamed_response():
 
     def generate():
         def on_token(token):
-            print("on token", token)
             token_queue.put(token)
 
         def stream_function():
