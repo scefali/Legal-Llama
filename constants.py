@@ -19,6 +19,9 @@ MODELS_PATH = "./models"
 
 # Can be changed to a specific number
 INGEST_THREADS = os.cpu_count() or 8
+# INGEST_THREADS = 100
+
+
 
 # Define the Chroma settings
 CHROMA_SETTINGS = Settings(
@@ -100,6 +103,8 @@ EMBEDDING_MODEL_NAME = "hkunlp/instructor-large"  # Uses 1.5 GB of VRAM (High Ac
 # what my machine uses
 LOCAL_MODEL_ID = "TheBloke/Llama-2-7b-Chat-GGUF"
 LOCAL_MODEL_BASENAME = "llama-2-7b-chat.Q4_K_M.gguf"
+# LOCAL_MODEL_ID = "TheBloke/Llama-2-13b-Chat-GGUF"
+# LOCAL_MODEL_BASENAME = "llama-2-13b-chat.Q4_K_M.gguf"
 
 
 # what AWS uses

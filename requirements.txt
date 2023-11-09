@@ -24,6 +24,7 @@ click
 flask
 requests
 boto3
+tqdm==4.65.0
 
 # Streamlit related
 streamlit

@@ -11,8 +11,8 @@ from flask import Flask, jsonify, stream_with_context, request
 
 from langchain.chains import RetrievalQA
 from langchain.embeddings import HuggingFaceInstructEmbeddings
+from langchain.prompts import PromptTemplate
 
-# from langchain.embeddings import HuggingFaceEmbeddings
 from run_localGPT import load_model
 
 from langchain.vectorstores import Chroma
@@ -33,6 +33,18 @@ EMBEDDINGS = HuggingFaceInstructEmbeddings(model_name=EMBEDDING_MODEL_NAME, mode
 queue = Queue()  # This queue will store user prompts
 
 set_debug(True)
+
+prompt_template = """
+Use the following pieces of context to answer the question at the end.
+If you don't know the answer, just say that you don't know, don't try to make up an answer.
+Just answer the question directly.
+
+{context}
+.\n\nQuestion: {question}\n
+
+Answer:"""
+
+PROMPT = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
 
 
 # uncomment the following line if you used HuggingFaceEmbeddings in the ingest.py
@@ -60,7 +72,11 @@ LLM = load_model(device_type=DEVICE_TYPE, model_id=MODEL_ID, model_basename=MODE
 print("got model", LLM)
 
 QA = RetrievalQA.from_chain_type(
-    llm=LLM, chain_type="stuff", retriever=RETRIEVER, return_source_documents=SHOW_SOURCES
+    llm=LLM,
+    chain_type="stuff",
+    retriever=RETRIEVER,
+    chain_type_kwargs={"prompt": PROMPT},
+    return_source_documents=SHOW_SOURCES,
 )
 
 app = Flask(__name__)
@@ -91,7 +107,6 @@ def prompt_route():
         return jsonify(prompt_response_dict), 200
     else:
         return "No user prompt received", 400
-    
 
 
 @app.route("/api/test", methods=["GET"])
@@ -141,4 +156,4 @@ if __name__ == "__main__":
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)s - %(message)s", level=logging.INFO
     )
-    app.run(debug=False, host='0.0.0.0', port=5110)
+    app.run(debug=False, host="0.0.0.0", port=5110)
